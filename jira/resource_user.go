@@ -43,7 +43,7 @@ func resourceUser() *schema.Resource {
 }
 
 func getUserByKey(client *jira.Client, key string) (*jira.User, *jira.Response, error) {
-	apiEndpoint := fmt.Sprintf("%s?key=%s", userAPIEndpoint, key)
+	apiEndpoint := fmt.Sprintf("%s?accountId=%s", userAPIEndpoint, key)
 	req, err := client.NewRequest("GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
@@ -58,7 +58,7 @@ func getUserByKey(client *jira.Client, key string) (*jira.User, *jira.Response, 
 }
 
 func deleteUserByKey(client *jira.Client, key string) (*jira.Response, error) {
-	apiEndpoint := fmt.Sprintf("%s?key=%s", userAPIEndpoint, key)
+	apiEndpoint := fmt.Sprintf("%s?accountId=%s", userAPIEndpoint, key)
 	req, err := client.NewRequest("DELETE", apiEndpoint, nil)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 		return errors.Wrap(err, "Request failed")
 	}
 
-	d.SetId(createdUser.Key)
+	d.SetId(createdUser.AccountID)
 
 	return resourceUserRead(d, m)
 }
