@@ -3,16 +3,9 @@ package jira
 import (
 	"fmt"
 	jira "github.com/andygrunwald/go-jira"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
-
-func usernameFallbackSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	if new == "" {
-		return old == d.Get("name")
-	}
-	return old == new
-}
 
 // resourceUser is used to define a JIRA issue
 func resourceUser() *schema.Resource {
@@ -21,22 +14,32 @@ func resourceUser() *schema.Resource {
 		Read:   resourceUserRead,
 		Delete: resourceUserDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"account_id": {
+				Description: "The Atlassian accoind id.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"email": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"name": {
+				Description: "The name of the user.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+			},
+			"email": {
+				Description: "The email address of the user.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			"display_name": &schema.Schema{
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: usernameFallbackSuppressFunc,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -80,10 +83,9 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	user.EmailAddress = d.Get("email").(string)
 
 	dn, ok := d.GetOkExists("display_name")
-	user.DisplayName = dn.(string)
 
-	if !ok {
-		user.DisplayName = user.Name
+	if ok {
+		user.DisplayName = dn.(string)
 	}
 
 	createdUser, _, err := config.jiraClient.User.Create(user)
@@ -106,6 +108,7 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 		return errors.Wrap(err, "getting jira user failed")
 	}
 
+	d.Set("account_id", user.AccountID)
 	d.Set("name", user.Name)
 	d.Set("display_name", user.DisplayName)
 	d.Set("email", user.EmailAddress)

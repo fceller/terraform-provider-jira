@@ -2,7 +2,7 @@ package jira
 
 import (
 	jira "github.com/andygrunwald/go-jira"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -12,11 +12,11 @@ func resourceJQL() *schema.Resource {
 		Read: resourceJQLRead,
 
 		Schema: map[string]*schema.Schema{
-			"jql": &schema.Schema{
+			"jql": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"issue_keys": &schema.Schema{
+			"issue_keys": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},

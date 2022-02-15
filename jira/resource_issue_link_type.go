@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	jira "github.com/andygrunwald/go-jira"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -19,15 +19,15 @@ func resourceIssueLinkType() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"inward": &schema.Schema{
+			"inward": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"outward": &schema.Schema{
+			"outward": {
 				Type:     schema.TypeString,
 				Required: true,
 			},

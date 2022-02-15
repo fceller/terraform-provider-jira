@@ -9,7 +9,7 @@ import (
 	jira "github.com/andygrunwald/go-jira"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -60,30 +60,30 @@ func resourceFilter() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"jql": &schema.Schema{
+			"jql": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"favourite": &schema.Schema{
+			"favourite": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"permissions": &schema.Schema{
+			"permissions": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Set:      resourceFilterPermissionsHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: func(v interface{}, s string) ([]string, []error) {
@@ -97,22 +97,22 @@ func resourceFilter() *schema.Resource {
 								return nil, nil
 							},
 						},
-						"project_id": &schema.Schema{
+						"project_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"project_role_id": &schema.Schema{
+						"project_role_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"group_name": &schema.Schema{
+						"group_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"id": &schema.Schema{
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

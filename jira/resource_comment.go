@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 
 	jira "github.com/andygrunwald/go-jira"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -17,11 +17,11 @@ func resourceComment() *schema.Resource {
 		Delete: resourceCommentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"body": &schema.Schema{
+			"body": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"issue_key": &schema.Schema{
+			"issue_key": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

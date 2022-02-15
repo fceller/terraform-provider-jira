@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	jira "github.com/andygrunwald/go-jira"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -65,69 +65,69 @@ func resourceProject() *schema.Resource {
 		Delete: resourceProjectDelete,
 
 		Schema: map[string]*schema.Schema{
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"key": &schema.Schema{
+			"key": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"shared_configuration_project_id": &schema.Schema{
+			"shared_configuration_project_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 			},
-			"project_type_key": &schema.Schema{
+			"project_type_key": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"project_template_key": &schema.Schema{
+			"project_template_key": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"lead": &schema.Schema{
+			"lead": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"lead_account_id": &schema.Schema{
+			"lead_account_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"assignee_type": &schema.Schema{
+			"assignee_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "UNASSIGNED",
 			},
-			"avatar_id": &schema.Schema{
+			"avatar_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"issue_security_scheme": &schema.Schema{
+			"issue_security_scheme": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"permission_scheme": &schema.Schema{
+			"permission_scheme": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"notification_scheme": &schema.Schema{
+			"notification_scheme": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"category_id": &schema.Schema{
+			"category_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},

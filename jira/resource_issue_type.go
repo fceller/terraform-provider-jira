@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	jira "github.com/andygrunwald/go-jira"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -28,21 +28,21 @@ func resourceIssueType() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Required: false,
 			},
-			"is_subtask": &schema.Schema{
+			"is_subtask": {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
 			},
-			"avatar_id": &schema.Schema{
+			"avatar_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},

@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 
 	jira "github.com/andygrunwald/go-jira"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 	"github.com/trivago/tgo/tcontainer"
 )
@@ -23,12 +23,12 @@ func resourceIssue() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"assignee": &schema.Schema{
+			"assignee": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				DiffSuppressFunc: caseInsensitiveSuppressFunc,
 			},
-			"reporter": &schema.Schema{
+			"reporter": {
 				Type:     schema.TypeString,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -38,7 +38,7 @@ func resourceIssue() *schema.Resource {
 					return caseInsensitiveSuppressFunc(k, old, new, d)
 				},
 			},
-			"fields": &schema.Schema{
+			"fields": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -46,34 +46,34 @@ func resourceIssue() *schema.Resource {
 					Required: true,
 				},
 			},
-			"issue_type": &schema.Schema{
+			"issue_type": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"summary": &schema.Schema{
+			"summary": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"project_key": &schema.Schema{
+			"project_key": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"parent": &schema.Schema{
+			"parent": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -83,16 +83,16 @@ func resourceIssue() *schema.Resource {
 					return old == new
 				},
 			},
-			"state_transition": &schema.Schema{
+			"state_transition": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"delete_transition": &schema.Schema{
+			"delete_transition": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			// Computed values
-			"issue_key": &schema.Schema{
+			"issue_key": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

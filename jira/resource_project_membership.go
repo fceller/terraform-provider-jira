@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
 
@@ -41,23 +41,23 @@ func resourceProjectMembership() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"project_key": &schema.Schema{
+			"project_key": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"role_id": &schema.Schema{
+			"role_id": {
 				Type:     schema.TypeInt,
 				ForceNew: true,
 				Required: true,
 			},
-			"username": &schema.Schema{
+			"username": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"group"},
 			},
-			"group": &schema.Schema{
+			"group": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
