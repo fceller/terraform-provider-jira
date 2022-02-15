@@ -109,7 +109,7 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("account_id", user.AccountID)
-	d.Set("name", user.Name)
+	d.Set("name", user.Key+" "+user.AccountType+" "+user.Name)
 	d.Set("display_name", user.DisplayName)
 	d.Set("email", user.EmailAddress)
 	return nil
