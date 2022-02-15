@@ -32,8 +32,8 @@ for PLATFORM in $(find ./output -mindepth 1 -maxdepth 1 -type d); do
     OSARCH=$(basename ${PLATFORM})
     echo -n "${OSARCH} "
 
-    pushd output >/dev/null 2>&1
-    zip ../artifacts/${OSARCH}.zip ${OSARCH}/*
+    pushd output/${OSARCH} >/dev/null 2>&1
+    zip ../../artifacts/${OSARCH}.zip *
     popd >/dev/null 2>&1
 
     pushd artifacts >/dev/null 2>&1
