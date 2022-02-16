@@ -2,10 +2,11 @@ package jira
 
 import (
 	"fmt"
-	jira "github.com/andygrunwald/go-jira"
+	"github.com/andygrunwald/go-jira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 	"io"
+	"strings"
 )
 
 // resourceUser is used to define a JIRA issue
@@ -37,7 +38,7 @@ func resourceUser() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			"display_name": &schema.Schema{
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -105,31 +106,34 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 // resourceUserRead reads issue details using jira api
 func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	config := m.(*Config)
+	id := d.Id()
 
-	user, _, err := getUserByKey(config.jiraClient, d.Id())
-	if err != nil {
-		return errors.Wrap(err, "getting jira user failed")
-	}
+	if strings.Contains(id, "@") {
+		apiEndpoint := fmt.Sprintf("/rest/api/2/groupuserpicker?query=%s&showAvatar=false&excludedConnectAddons=true", id)
+		req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
+		response, err := config.jiraClient.Do(req, nil)
 
-	d.Set("account_id", user.AccountID)
-	d.Set("display_name", user.DisplayName)
+		if err == nil {
+			defer response.Body.Close()
 
-	apiEndpoint := fmt.Sprintf("/rest/api/2/user/email?accountId=%s", d.Id())
-	req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
-	response, err2 := config.jiraClient.Do(req, nil)
+			body, err2 := io.ReadAll(response.Body)
 
-	if err2 == nil {
-		defer response.Body.Close()
-
-		body, err2 := io.ReadAll(response.Body)
-
-		if err2 == nil {
-			d.Set("name", string(body))
+			if err2 == nil {
+				d.Set("name", string(body))
+			} else {
+				return errors.Wrap(err2, "getting jira user failed")
+			}
 		} else {
 			return errors.Wrap(err, "getting jira user failed")
 		}
 	} else {
-		return errors.Wrap(err, "getting jira user failed")
+		user, _, err := getUserByKey(config.jiraClient, id)
+		if err != nil {
+			return errors.Wrap(err, "getting jira user failed")
+		}
+
+		d.Set("account_id", user.AccountID)
+		d.Set("display_name", user.DisplayName)
 	}
 	return nil
 }
