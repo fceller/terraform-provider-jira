@@ -53,6 +53,10 @@ func resourceUser() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"active": {
+				Type:    schema.TypeBool,
+				Default: true,
+			},
 		},
 	}
 }
@@ -158,6 +162,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 		d.Set("account_id", user.AccountID)
 		d.Set("display_name", user.DisplayName)
+		d.Set("active", user.Active)
 	}
 	return diags
 }
