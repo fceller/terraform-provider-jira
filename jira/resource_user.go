@@ -3,13 +3,28 @@ package jira
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/andygrunwald/go-jira"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
-	"io"
-	"strings"
 )
+
+type RawUser struct {
+	AccountId   string `json:"accountId" structs:"accountId"`
+	AccountType string `json:"accountType,omitempty" structs:"accountType,omitempty"`
+	DisplayName string `json:"displayName,omitempty" structs:"displayName,omitempty"`
+}
+
+type RawUsers struct {
+	Total int       `json:"total" structs:"total"`
+	Users []RawUser `json:"users" structs:"users"`
+}
+
+type RawSearch struct {
+	Users RawUsers `json:"users" structs:"users"`
+}
 
 // resourceUser is used to define a JIRA issue
 func resourceUser() *schema.Resource {
@@ -112,23 +127,14 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 
 	if strings.Contains(id, "@") {
 		apiEndpoint := fmt.Sprintf("/rest/api/2/groupuserpicker?query=%s&showAvatar=false&excludedConnectAddons=true", id)
-		tflog.Info(context.Background(), "API: "+apiEndpoint)
 		req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
-		response, err := config.jiraClient.Do(req, nil)
+		search := new(RawSearch)
+		_, err := config.jiraClient.Do(req, &search)
 
 		if err == nil {
-			defer response.Body.Close()
-
-			body, err2 := io.ReadAll(response.Body)
-
-			if err2 == nil {
-				tflog.Info(context.Background(), "BODY: "+string(body))
-				d.Set("name", string(body))
-			} else {
-				return errors.Wrap(err2, "getting jira user failed")
-			}
+			tflog.Info(context.Background(), "RESULT: "+string(search.Users.Total))
 		} else {
-			return errors.Wrap(err, "getting jira user failed")
+			return errors.Wrap(err, "getting jira user via search failed")
 		}
 	} else {
 		user, _, err := getUserByKey(config.jiraClient, id)
