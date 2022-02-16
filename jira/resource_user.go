@@ -203,8 +203,13 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			x := fmt.Sprintf("TOTAL %d\n", len(*users))
 
 			for _, u := range *users {
-				x = fmt.Sprintf("%s\nGROUP %s %s", u, u.Self, u.Name)
-				RemoveWithContext2(ctx, m, u.Name, id)
+				x = fmt.Sprintf("%s\nGROUP %s %s", x, u.Self, u.Name)
+				_, err := RemoveWithContext2(ctx, m, u.Name, id)
+				msg := ""
+				if err != nil {
+					msg = err.Error()
+				}
+				x = fmt.Sprintf("%s\n%s", x, msg)
 			}
 
 			d.Set("display_name", x)
