@@ -4,29 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"io"
 	"strings"
 
 	"github.com/andygrunwald/go-jira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type RawUser struct {
-	AccountId   string `json:"accountId" structs:"accountId"`
-	AccountType string `json:"accountType,omitempty" structs:"accountType,omitempty"`
-	DisplayName string `json:"displayName,omitempty" structs:"displayName,omitempty"`
-}
-
-type RawUsers struct {
-	Total int       `json:"total" structs:"total"`
-	Users []RawUser `json:"users" structs:"users"`
-}
-
-type RawSearch struct {
-	Users RawUsers `json:"users" structs:"users"`
-}
-
-// resourceUser is used to define a JIRA issue
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceUserCreate,
@@ -137,28 +120,23 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	id := d.Id()
 
 	if strings.Contains(id, "@") {
-		apiEndpoint := fmt.Sprintf("/rest/api/2/groupuserpicker?query=%s&showAvatar=false&excludedConnectAddons=true", id)
-		req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
-		search := new(RawSearch)
-		_, err := config.jiraClient.Do(req, &search)
+		users, _, err := config.jiraClient.User.FindWithContext(ctx, id, nil)
 
-		if err == nil {
-			total := search.Users.Total
-
-			if total != 1 {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  fmt.Sprintf("no exact match, found %d users", total),
-				})
-				return diags
-			} else {
-				d.SetId(search.Users.Users[0].AccountId)
-				d.Set("account_id", search.Users.Users[0].AccountId)
-				d.Set("display_name", search.Users.Users[0].DisplayName)
-				d.Set("email", id)
-			}
-		} else {
+		if err != nil {
 			return diag.FromErr(err)
+		}
+
+		if len(users) == 1 {
+			d.SetId(users[0].AccountID)
+			d.Set("account_id", users[0].AccountID)
+			d.Set("display_name", users[0].DisplayName)
+			d.Set("email", id)
+		} else {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("no exact match, found %d users", len(users)),
+			})
+			return diags
 		}
 	} else {
 		user, _, err := getUserByKey(config.jiraClient, id)
@@ -171,15 +149,6 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		d.Set("active", user.Active)
 	}
 
-	{
-		apiEndpoint := fmt.Sprintf("/rest/api/3/user/groups?accountId=%s", id)
-		req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
-		response, _ := config.jiraClient.Do(req, nil)
-		defer response.Body.Close()
-		body, _ := io.ReadAll(response.Body)
-		d.Set("groups", string(body))
-	}
-
 	return diags
 }
 
@@ -187,25 +156,33 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	var diags diag.Diagnostics
 
 	config := m.(*Config)
+	id := d.Id()
 
 	if active := d.Get("active").(bool); d.HasChange("active") {
-		id := d.Id()
+		if active {
+		} else {
+			_, err1 := config.jiraClient.Group.Remove("jira-servicedesk-users", id)
 
-		state := "enable"
-		if !active {
-			state = "disable"
-		}
+			if err1 != nil {
+				return diag.FromErr(err1)
+			}
+			_, err2 := config.jiraClient.Group.Remove("confluence-users", id)
 
-		apiEndpoint := fmt.Sprintf("/users/%s/manage/lifecycle/%s", id, state)
-		req, _ := config.jiraClient.NewRequest("POST", apiEndpoint, nil)
-		_, err := config.jiraClient.Do(req, nil)
+			if err2 != nil {
+				return diag.FromErr(err2)
+			}
 
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Request '%s' failed: %s", apiEndpoint, err.Error()),
-			})
-			return diags
+			_, err3 := config.jiraClient.Group.Remove("opsgenie-users", id)
+
+			if err3 != nil {
+				return diag.FromErr(err3)
+			}
+
+			_, err4 := config.jiraClient.Group.Remove("jira-software-users", id)
+
+			if err4 != nil {
+				return diag.FromErr(err4)
+			}
 		}
 	}
 
@@ -225,3 +202,69 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface
 
 	return diags
 }
+
+/*
+type RawUser struct {
+	AccountId   string `json:"accountId" structs:"accountId"`
+	AccountType string `json:"accountType,omitempty" structs:"accountType,omitempty"`
+	DisplayName string `json:"displayName,omitempty" structs:"displayName,omitempty"`
+}
+
+type RawUsers struct {
+	Total int       `json:"total" structs:"total"`
+	Users []RawUser `json:"users" structs:"users"`
+}
+
+type RawSearch struct {
+	Users RawUsers `json:"users" structs:"users"`
+}
+
+apiEndpoint := fmt.Sprintf("/rest/api/2/groupuserpicker?query=%s&showAvatar=false&excludedConnectAddons=true", id)
+		req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
+		search := new(RawSearch)
+		_, err := config.jiraClient.Do(req, &search)
+
+		if err == nil {
+			total := search.Users.Total
+
+			if total != 1 {
+
+			} else {
+
+			}
+		} else {
+			return diag.FromErr(err)
+		}
+*/
+
+/*
+{
+		apiEndpoint := fmt.Sprintf("/rest/api/3/user/groups?accountId=%s", id)
+		req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
+		response, _ := config.jiraClient.Do(req, nil)
+		defer response.Body.Close()
+		body, _ := io.ReadAll(response.Body)
+		d.Set("groups", string(body))
+	}
+*/
+
+/*
+	id := d.Id()
+
+		state := "enable"
+		if !active {
+			state = "disable"
+		}
+
+		apiEndpoint := fmt.Sprintf("/users/%s/manage/lifecycle/%s", id, state)
+		req, _ := config.jiraClient.NewRequest("POST", apiEndpoint, nil)
+		_, err := config.jiraClient.Do(req, nil)
+
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Request '%s' failed: %s", apiEndpoint, err.Error()),
+			})
+			return diags
+		}
+*/
