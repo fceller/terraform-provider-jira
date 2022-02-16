@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"net/url"
 	"strings"
 
 	"github.com/andygrunwald/go-jira"
@@ -170,7 +171,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 func RemoveWithContext2(ctx context.Context, m interface{}, groupname string, username string) (*jira.Response, error) {
 	config := m.(*Config)
 
-	apiEndpoint := fmt.Sprintf("/rest/api/3/group/user?groupname=%s&accountId=%s", groupname, username)
+	apiEndpoint := fmt.Sprintf("/rest/api/3/group/user?groupname=%s&accountId=%s", url.QueryEscape(groupname), username)
 	req, err := config.jiraClient.NewRequestWithContext(ctx, "DELETE", apiEndpoint, nil)
 	if err != nil {
 		return nil, err
