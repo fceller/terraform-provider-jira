@@ -170,7 +170,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 func RemoveWithContext2(ctx context.Context, m interface{}, groupname string, username string) (*jira.Response, error) {
 	config := m.(*Config)
 
-	apiEndpoint := fmt.Sprintf("/rest/api/2/group/user?groupname=%s&accountId=%s", groupname, username)
+	apiEndpoint := fmt.Sprintf("/rest/api/3/group/user?groupName=%s&accountId=%s", groupname, username)
 	req, err := config.jiraClient.NewRequestWithContext(ctx, "DELETE", apiEndpoint, nil)
 	if err != nil {
 		return nil, err
