@@ -174,14 +174,14 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if active := d.Get("active").(bool); d.HasChange("active") {
 		if active {
 		} else {
-			users, _, err := config.jiraClient.User.GetGroups(id)
+			users, _, err := config.jiraClient.User.GetGroupsWithContext(ctx, id)
 
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
 			for _, u := range *users {
-				RemoveWithContext2(ctx, m, u.Name, id)
+				RemoveWithContext2(ctx, m, u.Self, id)
 			}
 		}
 	}
