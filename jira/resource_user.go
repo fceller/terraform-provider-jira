@@ -1,12 +1,10 @@
 package jira
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
 	"github.com/andygrunwald/go-jira"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -133,10 +131,13 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 
 		if err == nil {
 			total := search.Users.Total
-			tflog.Warn(context.Background(), fmt.Sprintf("RESULT: %d", string(total)))
 
 			if total != 1 {
-				return errors.Wrap(errors.New("no exact match"), fmt.Sprintf("no exact match, found %d users", total))
+				return errors.Wrap(errors.New("no exact match"), fmt.Sprintf("found %d users", total))
+			} else {
+				d.SetId(search.Users.Users[0].AccountId)
+				d.Set("account_id", search.Users.Users[0].AccountId)
+				d.Set("display_name", search.Users.Users[0].DisplayName)
 			}
 		} else {
 			return errors.Wrap(err, "getting jira user via search failed")
