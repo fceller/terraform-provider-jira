@@ -132,7 +132,12 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 		_, err := config.jiraClient.Do(req, &search)
 
 		if err == nil {
-			tflog.Info(context.Background(), "RESULT: "+string(search.Users.Total))
+			total := search.Users.Total
+			tflog.Warn(context.Background(), fmt.Sprintf("RESULT: %d", string(total)))
+
+			if total != 1 {
+				return errors.Wrap(errors.New("no exact match"), fmt.Sprintf("no exact match, found %d users", total))
+			}
 		} else {
 			return errors.Wrap(err, "getting jira user via search failed")
 		}
