@@ -1,12 +1,13 @@
 package jira
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
 	"github.com/andygrunwald/go-jira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 type RawUser struct {
@@ -27,9 +28,9 @@ type RawSearch struct {
 // resourceUser is used to define a JIRA issue
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserCreate,
-		Read:   resourceUserRead,
-		Delete: resourceUserDelete,
+		CreateContext: resourceUserCreate,
+		ReadContext:   resourceUserRead,
+		DeleteContext: resourceUserDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -86,7 +87,9 @@ func deleteUserByKey(client *jira.Client, key string) (*jira.Response, error) {
 }
 
 // resourceUserCreate creates a new jira user using the jira api
-func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	config := m.(*Config)
 
 	user := new(jira.User)
@@ -96,24 +99,30 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	createdUser, _, err := config.jiraClient.User.Create(user)
 
 	if err != nil {
-		return errors.Wrap(err, "Request failed")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Request failed: %s", err.Error()),
+		})
+		return diags
 	}
 
 	d.SetId(createdUser.AccountID)
 
-	err = resourceUserRead(d, m)
+	diags = resourceUserRead(ctx, d, m)
 
-	if err != nil {
-		return errors.Wrap(err, "Request failed")
+	if diags.HasError() {
+		return diags
 	}
 
 	d.Set("email", user.EmailAddress)
 
-	return nil
+	return diags
 }
 
 // resourceUserRead reads issue details using jira api
-func resourceUserRead(d *schema.ResourceData, m interface{}) error {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	config := m.(*Config)
 	id := d.Id()
 
@@ -127,7 +136,11 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 			total := search.Users.Total
 
 			if total != 1 {
-				return errors.Wrap(errors.New("no exact match"), fmt.Sprintf("found %d users", total))
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  fmt.Sprintf("no exact match, found %d users", total),
+				})
+				return diags
 			} else {
 				d.SetId(search.Users.Users[0].AccountId)
 				d.Set("account_id", search.Users.Users[0].AccountId)
@@ -135,29 +148,31 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 				d.Set("email", id)
 			}
 		} else {
-			return errors.Wrap(err, "getting jira user via search failed")
+			return diag.FromErr(err)
 		}
 	} else {
 		user, _, err := getUserByKey(config.jiraClient, id)
 		if err != nil {
-			return errors.Wrap(err, "getting jira user failed")
+			return diag.FromErr(err)
 		}
 
 		d.Set("account_id", user.AccountID)
 		d.Set("display_name", user.DisplayName)
 	}
-	return nil
+	return diags
 }
 
 // resourceUserDelete deletes jira issue using the jira api
-func resourceUserDelete(d *schema.ResourceData, m interface{}) error {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	config := m.(*Config)
 
 	_, err := deleteUserByKey(config.jiraClient, d.Id())
 
 	if err != nil {
-		return errors.Wrap(err, "Request failed")
+		return diag.FromErr(err)
 	}
 
-	return nil
+	return diags
 }
