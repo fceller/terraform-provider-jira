@@ -3,7 +3,6 @@ package jira
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
@@ -182,12 +181,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		}
 
 		apiEndpoint := fmt.Sprintf("/users/%s/manage/lifecycle/%s", id, state)
-		tflog.Warn(ctx, apiEndpoint)
 		req, _ := config.jiraClient.NewRequest("POST", apiEndpoint, nil)
 		_, err := config.jiraClient.Do(req, nil)
 
 		if err != nil {
-			return diag.FromErr(err)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Request '%s' failed: %s", apiEndpoint, err.Error()),
+			})
+			return diags
 		}
 	}
 
