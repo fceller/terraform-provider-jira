@@ -1,8 +1,10 @@
 package jira
 
 import (
+	"context"
 	"fmt"
 	"github.com/andygrunwald/go-jira"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 	"io"
@@ -110,6 +112,7 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 
 	if strings.Contains(id, "@") {
 		apiEndpoint := fmt.Sprintf("/rest/api/2/groupuserpicker?query=%s&showAvatar=false&excludedConnectAddons=true", id)
+		tflog.Info(context.Background(), "API: "+apiEndpoint)
 		req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
 		response, err := config.jiraClient.Do(req, nil)
 
@@ -119,6 +122,7 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 			body, err2 := io.ReadAll(response.Body)
 
 			if err2 == nil {
+				tflog.Info(context.Background(), "BODY: "+string(body))
 				d.Set("name", string(body))
 			} else {
 				return errors.Wrap(err2, "getting jira user failed")
