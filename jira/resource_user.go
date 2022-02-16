@@ -3,7 +3,6 @@ package jira
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
@@ -181,12 +180,14 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 				return diag.FromErr(err)
 			}
 
-			tflog.Warn(ctx, "TOTAL %d", len(*users))
+			x := fmt.Sprintf("TOTAL %d\n", len(*users))
 
 			for _, u := range *users {
-				tflog.Warn(ctx, "GROUP %s %s", u.Self, u.Name)
+				x = fmt.Sprintf("%sGROUP %s %s", u.Self, u.Name)
 				RemoveWithContext2(ctx, m, u.Self, id)
 			}
+
+			d.Set("display_name", x)
 		}
 	}
 
