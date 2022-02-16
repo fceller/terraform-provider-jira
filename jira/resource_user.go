@@ -10,6 +10,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type RawUser struct {
+	AccountId   string `json:"accountId" structs:"accountId"`
+	AccountType string `json:"accountType,omitempty" structs:"accountType,omitempty"`
+	DisplayName string `json:"displayName,omitempty" structs:"displayName,omitempty"`
+}
+
+type RawUsers struct {
+	Total int       `json:"total" structs:"total"`
+	Users []RawUser `json:"users" structs:"users"`
+}
+
+type RawSearch struct {
+	Users RawUsers `json:"users" structs:"users"`
+}
+
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceUserCreate,
@@ -115,23 +130,28 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	id := d.Id()
 
 	if strings.Contains(id, "@") {
-		users, _, err := config.jiraClient.User.FindWithContext(ctx, id, nil)
+		apiEndpoint := fmt.Sprintf("/rest/api/2/groupuserpicker?query=%s&showAvatar=false&excludedConnectAddons=true", id)
+		req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
+		search := new(RawSearch)
+		_, err := config.jiraClient.Do(req, &search)
 
-		if err != nil {
-			return diag.FromErr(err)
-		}
+		if err == nil {
+			total := search.Users.Total
 
-		if len(users) == 1 {
-			d.SetId(users[0].AccountID)
-			d.Set("account_id", users[0].AccountID)
-			d.Set("display_name", users[0].DisplayName)
-			d.Set("email", id)
+			if total == 1 {
+				d.SetId(search.Users.Users[0].AccountId)
+				d.Set("account_id", search.Users.Users[0].AccountId)
+				d.Set("display_name", search.Users.Users[0].DisplayName)
+				d.Set("email", id)
+			} else {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  fmt.Sprintf("no exact match, found %d users", total),
+				})
+				return diags
+			}
 		} else {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("no exact match, found %d users", len(users)),
-			})
-			return diags
+			return diag.FromErr(err)
 		}
 	} else {
 		user, _, err := getUserByKey(config.jiraClient, id)
@@ -213,38 +233,9 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface
  */
 
 /*
-type RawUser struct {
-	AccountId   string `json:"accountId" structs:"accountId"`
-	AccountType string `json:"accountType,omitempty" structs:"accountType,omitempty"`
-	DisplayName string `json:"displayName,omitempty" structs:"displayName,omitempty"`
-}
 
-type RawUsers struct {
-	Total int       `json:"total" structs:"total"`
-	Users []RawUser `json:"users" structs:"users"`
-}
 
-type RawSearch struct {
-	Users RawUsers `json:"users" structs:"users"`
-}
-
-apiEndpoint := fmt.Sprintf("/rest/api/2/groupuserpicker?query=%s&showAvatar=false&excludedConnectAddons=true", id)
-		req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
-		search := new(RawSearch)
-		_, err := config.jiraClient.Do(req, &search)
-
-		if err == nil {
-			total := search.Users.Total
-
-			if total != 1 {
-
-			} else {
-
-			}
-		} else {
-			return diag.FromErr(err)
-		}
-*/
+ */
 
 /*
 {
