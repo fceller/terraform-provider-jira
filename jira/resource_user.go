@@ -30,6 +30,7 @@ func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceUserCreate,
 		ReadContext:   resourceUserRead,
+		UpdateContext: resourceUserUpdate,
 		DeleteContext: resourceUserDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -91,7 +92,6 @@ func deleteUserByKey(client *jira.Client, key string) (*jira.Response, error) {
 	return resp, nil
 }
 
-// resourceUserCreate creates a new jira user using the jira api
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -124,7 +124,6 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 	return diags
 }
 
-// resourceUserRead reads issue details using jira api
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -168,7 +167,31 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	return diags
 }
 
-// resourceUserDelete deletes jira issue using the jira api
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	config := m.(*Config)
+
+	if active := d.Get("active").(bool); d.HasChange("active") {
+		id := d.Id()
+
+		state := "enable"
+		if !active {
+			state = "disable"
+		}
+
+		apiEndpoint := fmt.Sprintf("/users/%s/manage/lifecycle/%s", id, state)
+		req, _ := config.jiraClient.NewRequest("POST", apiEndpoint, nil)
+		_, err := config.jiraClient.Do(req, nil)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return diags
+}
+
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
