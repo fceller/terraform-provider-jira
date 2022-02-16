@@ -147,6 +147,42 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	return diags
 }
 
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	config := m.(*Config)
+	id := d.Id()
+
+	if active := d.Get("active").(bool); d.HasChange("active") {
+		if active {
+		} else {
+			_, err := config.jiraClient.User.DeleteWithContext(ctx, id)
+
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
+	return diags
+}
+
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	config := m.(*Config)
+
+	_, err := deleteUserByKey(config.jiraClient, d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return diags
+}
+
+/*
+
 func RemoveWithContext2(ctx context.Context, m interface{}, groupname string, username string) (*jira.Response, error) {
 	config := m.(*Config)
 
@@ -165,16 +201,7 @@ func RemoveWithContext2(ctx context.Context, m interface{}, groupname string, us
 	return resp, nil
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// config := m.(*Config)
-	id := d.Id()
-
-	if active := d.Get("active").(bool); d.HasChange("active") {
-		if active {
-		} else {
-			_, err1 := RemoveWithContext2(ctx, m, "jira-servicedesk-users", id)
+_, err1 := RemoveWithContext2(ctx, m, "jira-servicedesk-users", id)
 
 			if err1 != nil {
 				return diag.FromErr(err1)
@@ -196,25 +223,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			if err4 != nil {
 				return diag.FromErr(err4)
 			}
-		}
-	}
-
-	return diags
-}
-
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	config := m.(*Config)
-
-	_, err := deleteUserByKey(config.jiraClient, d.Id())
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	return diags
-}
+*/
 
 /*
 type RawUser struct {
