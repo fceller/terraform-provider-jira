@@ -114,7 +114,7 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("account_id", user.AccountID)
 	d.Set("display_name", user.DisplayName)
 
-	apiEndpoint := fmt.Sprintf("%s?accountId=%s", userAPIEndpoint, d.Id())
+	apiEndpoint := fmt.Sprintf("/rest/api/2/user/email?accountId=%s", d.Id())
 	req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
 	response, err2 := config.jiraClient.Do(req, nil)
 
