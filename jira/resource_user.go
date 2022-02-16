@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"io"
 	"strings"
 
 	"github.com/andygrunwald/go-jira"
@@ -58,6 +59,11 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+			},
+			"groups": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
 			},
 		},
 	}
@@ -164,6 +170,16 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		d.Set("display_name", user.DisplayName)
 		d.Set("active", user.Active)
 	}
+
+	{
+		apiEndpoint := fmt.Sprintf("/rest/api/3/user/groups?accountId=%s", id)
+		req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
+		response, _ := config.jiraClient.Do(req, nil)
+		defer response.Body.Close()
+		body, _ := io.ReadAll(response.Body)
+		d.Set("groups", string(body))
+	}
+
 	return diags
 }
 
