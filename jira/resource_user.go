@@ -5,6 +5,7 @@ import (
 	jira "github.com/andygrunwald/go-jira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
+	"io"
 )
 
 // resourceUser is used to define a JIRA issue
@@ -20,7 +21,7 @@ func resourceUser() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {
-				Description: "The Atlassian accoind id.",
+				Description: "The Atlassian account id.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -79,14 +80,8 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 	config := m.(*Config)
 
 	user := new(jira.User)
-	user.Name = d.Get("name").(string)
+	user.DisplayName = d.Get("display_name").(string)
 	user.EmailAddress = d.Get("email").(string)
-
-	dn, ok := d.GetOkExists("display_name")
-
-	if ok {
-		user.DisplayName = dn.(string)
-	}
 
 	createdUser, _, err := config.jiraClient.User.Create(user)
 
@@ -96,7 +91,15 @@ func resourceUserCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(createdUser.AccountID)
 
-	return resourceUserRead(d, m)
+	err = resourceUserRead(d, m)
+
+	if err != nil {
+		return errors.Wrap(err, "Request failed")
+	}
+
+	d.Set("email", user.EmailAddress)
+
+	return nil
 }
 
 // resourceUserRead reads issue details using jira api
@@ -109,9 +112,23 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("account_id", user.AccountID)
-	d.Set("name", user.Key+" "+user.AccountType+" "+user.Name)
 	d.Set("display_name", user.DisplayName)
-	d.Set("email", user.EmailAddress)
+
+	response, err2 := config.jiraClient.NewRequest("GET", "/rest/api/2/user/email", nil)
+
+	if err2 == nil {
+		defer response.Body.Close()
+
+		body, err2 := io.ReadAll(response.Body)
+
+		if err2 == nil {
+			d.Set("name", string(body))
+		} else {
+			return errors.Wrap(err, "getting jira user failed")
+		}
+	} else {
+		return errors.Wrap(err, "getting jira user failed")
+	}
 	return nil
 }
 
