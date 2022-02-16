@@ -41,12 +41,6 @@ func resourceUser() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"name": {
-				Description: "The name of the user.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-			},
 			"email": {
 				Description: "The email address of the user.",
 				Type:        schema.TypeString,
@@ -138,6 +132,7 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 				d.SetId(search.Users.Users[0].AccountId)
 				d.Set("account_id", search.Users.Users[0].AccountId)
 				d.Set("display_name", search.Users.Users[0].DisplayName)
+				d.Set("email", id)
 			}
 		} else {
 			return errors.Wrap(err, "getting jira user via search failed")
