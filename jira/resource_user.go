@@ -147,6 +147,24 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	return diags
 }
 
+func RemoveWithContext2(ctx context.Context, m interface{}, groupname string, username string) (*jira.Response, error) {
+	config := m.(*Config)
+
+	apiEndpoint := fmt.Sprintf("/rest/api/2/group/user?groupname=%s&accountId=%s", groupname, username)
+	req, err := config.jiraClient.NewRequestWithContext(ctx, "DELETE", apiEndpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := config.jiraClient.Do(req, nil)
+	if err != nil {
+		jerr := jira.NewJiraError(resp, err)
+		return resp, jerr
+	}
+
+	return resp, nil
+}
+
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -156,10 +174,14 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if active := d.Get("active").(bool); d.HasChange("active") {
 		if active {
 		} else {
-			_, err := config.jiraClient.User.DeleteWithContext(ctx, id)
+			users, _, err := config.jiraClient.User.GetGroups(id)
 
 			if err != nil {
 				return diag.FromErr(err)
+			}
+
+			for _, u := range *users {
+				RemoveWithContext2(ctx, m, u.Name, id)
 			}
 		}
 	}
@@ -183,47 +205,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface
 
 /*
 
-func RemoveWithContext2(ctx context.Context, m interface{}, groupname string, username string) (*jira.Response, error) {
-	config := m.(*Config)
-
-	apiEndpoint := fmt.Sprintf("/rest/api/2/group/user?groupname=%s&accountId=%s", groupname, username)
-	req, err := config.jiraClient.NewRequestWithContext(ctx, "DELETE", apiEndpoint, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := config.jiraClient.Do(req, nil)
-	if err != nil {
-		jerr := jira.NewJiraError(resp, err)
-		return resp, jerr
-	}
-
-	return resp, nil
-}
-
-_, err1 := RemoveWithContext2(ctx, m, "jira-servicedesk-users", id)
-
-			if err1 != nil {
-				return diag.FromErr(err1)
-			}
-			_, err2 := RemoveWithContext2(ctx, m, "confluence-users", id)
-
-			if err2 != nil {
-				return diag.FromErr(err2)
-			}
-
-			_, err3 := RemoveWithContext2(ctx, m, "opsgenie-users", id)
-
-			if err3 != nil {
-				return diag.FromErr(err3)
-			}
-
-			_, err4 := RemoveWithContext2(ctx, m, "jira-software-users", id)
-
-			if err4 != nil {
-				return diag.FromErr(err4)
-			}
-*/
+ */
 
 /*
 type RawUser struct {
