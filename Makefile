@@ -1,4 +1,3 @@
-PKG := $(shell go list ./... | grep -v vendor)
 TEST := $(shell go list ./... |grep -v vendor)
 
 
@@ -13,6 +12,13 @@ deps: ## Download dependencies
 
 build: ## Build
 	go build .
+
+tag: ## Create a tag
+	test -n "$(TAG)"
+	git pull --tags
+	git tag v$(TAG)
+	git push --tags
+	$(MAKE) release
 
 release: ## Build the go binaries for various platform
 	./scripts/release.sh

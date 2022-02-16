@@ -114,7 +114,9 @@ func resourceUserRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("account_id", user.AccountID)
 	d.Set("display_name", user.DisplayName)
 
-	response, err2 := config.jiraClient.NewRequest("GET", "/rest/api/2/user/email", nil)
+	apiEndpoint := fmt.Sprintf("%s?accountId=%s", userAPIEndpoint, d.Id())
+	req, _ := config.jiraClient.NewRequest("GET", apiEndpoint, nil)
+	response, err2 := config.jiraClient.Do(req, nil)
 
 	if err2 == nil {
 		defer response.Body.Close()
