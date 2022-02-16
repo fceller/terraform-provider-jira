@@ -146,7 +146,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			} else {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  fmt.Sprintf("no exact match, found %d users", total),
+					Summary:  fmt.Sprintf("no exact match for %s, found %d users", id, total),
 				})
 				return diags
 			}
@@ -203,8 +203,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			x := fmt.Sprintf("TOTAL %d\n", len(*users))
 
 			for _, u := range *users {
-				x = fmt.Sprintf("%sGROUP %s %s", u.Self, u.Name)
-				RemoveWithContext2(ctx, m, u.Self, id)
+				x = fmt.Sprintf("%s\nGROUP %s %s", u, u.Self, u.Name)
+				RemoveWithContext2(ctx, m, u.Name, id)
 			}
 
 			d.Set("display_name", x)
