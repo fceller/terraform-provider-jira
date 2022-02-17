@@ -137,7 +137,13 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		_, err := config.jiraClient.Do(req, &search)
 
 		if err == nil {
-			total := search.Users.Total
+			users := make([]RawUser, 0)
+			for _, v := range search.Users.Users {
+				if !strings.HasPrefix(v.AccountId, "qm:") {
+					users = append(users, v)
+				}
+			}
+			total := len(users)
 
 			if total == 1 {
 				d.SetId(search.Users.Users[0].AccountId)
@@ -146,7 +152,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 				d.Set("email", id)
 			} else {
 				names := make([]string, 0)
-				for _, v := range search.Users.Users {
+				for _, v := range users {
 					names = append(names, fmt.Sprintf("%s/%s", v.AccountId, v.DisplayName))
 				}
 				diags = append(diags, diag.Diagnostic{
@@ -205,9 +211,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			apiEndpoint += "disable"
 		}
 
-		_, err := config.adminClient.NewRequestWithContext(ctx, "POST", apiEndpoint, "{\"message\":\"managed by terraform\"}")
+		req, err := config.adminClient.NewRequestWithContext(ctx, "POST", apiEndpoint, "{\"message\":\"managed by terraform\"}")
 
 		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		_, err2 := config.adminClient.Do(req, nil)
+
+		if err2 != nil {
 			return diag.FromErr(err)
 		}
 	}
