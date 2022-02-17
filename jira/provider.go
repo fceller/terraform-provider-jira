@@ -26,7 +26,14 @@ func Provider() *schema.Provider {
 				Required:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("JIRA_PASSWORD", nil),
-				Description: "Password/API Key of the user",
+				Description: "The USER API KEY for the user. An ADMIN API KEY will not work.",
+			},
+			"token": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
+				DefaultFunc: schema.EnvDefaultFunc("JIRA_TOKEN", nil),
+				Description: "The ADMIN API KEY for the user. A USER API KEY will not work.",
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{

@@ -145,9 +145,14 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 				d.Set("display_name", search.Users.Users[0].DisplayName)
 				d.Set("email", id)
 			} else {
+				names := make([]string, 0)
+				for _, v := range search.Users.Users {
+					names = append(names, fmt.Sprintf("%s/%s", v.AccountId, v.DisplayName))
+				}
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  fmt.Sprintf("no exact match for %s, found %d users", id, total),
+					Summary: fmt.Sprintf("no exact match for %s, found %d users (%s)",
+						id, total, strings.Join(names, ",")),
 				})
 				return diags
 			}
@@ -193,27 +198,17 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	id := d.Id()
 
 	if active := d.Get("active").(bool); d.HasChange("active") {
+		apiEndpoint := fmt.Sprintf("/user/%s/mange/lifecycle/", id)
 		if active {
+			apiEndpoint += "enable"
 		} else {
-			users, _, err := config.jiraClient.User.GetGroupsWithContext(ctx, id)
+			apiEndpoint += "disable"
+		}
 
-			if err != nil {
-				return diag.FromErr(err)
-			}
+		_, err := config.adminClient.NewRequestWithContext(ctx, "POST", apiEndpoint, "{\"message\":\"managed by terraform\"}")
 
-			x := fmt.Sprintf("TOTAL %d\n", len(*users))
-
-			for _, u := range *users {
-				x = fmt.Sprintf("%s\nGROUP %s %s", x, u.Self, u.Name)
-				_, err := RemoveWithContext2(ctx, m, u.Name, id)
-				msg := ""
-				if err != nil {
-					msg = err.Error()
-				}
-				x = fmt.Sprintf("%s\n%s", x, msg)
-			}
-
-			d.Set("display_name", x)
+		if err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
@@ -235,8 +230,27 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 /*
+	users, _, err := config.jiraClient.User.GetGroupsWithContext(ctx, id)
 
- */
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	x := fmt.Sprintf("TOTAL %d\n", len(*users))
+
+	for _, u := range *users {
+		x = fmt.Sprintf("%s\nGROUP %s %s", x, u.Self, u.Name)
+		_, err := RemoveWithContext2(ctx, m, u.Name, id)
+		msg := ""
+		if err != nil {
+			msg = err.Error()
+		}
+		x = fmt.Sprintf("%s\n%s", x, msg)
+	}
+
+	d.Set("display_name", x)
+
+*/
 
 /*
 
