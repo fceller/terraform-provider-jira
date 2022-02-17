@@ -14,7 +14,7 @@ build: ## Build
 	go build .
 
 tag: ## Create a tag
-	test -n "$(TAG)"
+	@test -n "$(TAG)"
 	git pull --tags
 	git tag v$(TAG)
 	git push --tags

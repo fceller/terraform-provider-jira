@@ -204,14 +204,18 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	id := d.Id()
 
 	if active := d.Get("active").(bool); d.HasChange("active") {
-		apiEndpoint := fmt.Sprintf("/user/%s/mange/lifecycle/", id)
+		apiEndpoint := fmt.Sprintf("/users/%s/manage/lifecycle/", id)
 		if active {
 			apiEndpoint += "enable"
 		} else {
 			apiEndpoint += "disable"
 		}
 
-		req, err := config.adminClient.NewRequestWithContext(ctx, "POST", apiEndpoint, "{\"message\":\"managed by terraform\"}")
+		req, err := config.adminClient.NewRequestWithContext(
+			ctx,
+			"POST",
+			apiEndpoint,
+			map[string]interface{}{"message": "managed by terraform"})
 
 		if err != nil {
 			return diag.FromErr(err)

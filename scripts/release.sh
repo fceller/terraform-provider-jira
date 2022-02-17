@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # define architecture we want to build
 ARCH=${ARCH:-"amd64 arm64"}
@@ -10,16 +11,29 @@ echo "Running clean up..."
 rm -rf output
 rm -rf artifacts
 
+if test -n "${DEST}"; then
+    dest=`realpath ${DEST}`
+fi
+
 # build
 # we want to build statically linked binaries
 export CGO_ENABLED=0
 echo -n "Building... "
+
 for os in ${OS}; do
     for arch in ${ARCH}; do
         echo -n "${os}_${arch} "
-        env GOOS=$os GOARCH=$arch go build -o "output/terraform-provider-jira_${TAG}_${os}_${arch}/terraform-provider-jira_$TAG"
+        env GOOS=${os} GOARCH=${arch} go build -o "output/terraform-provider-jira_${TAG}_${os}_${arch}/terraform-provider-jira_${TAG}"
         cp README.md output/terraform-provider-jira_${TAG}_${os}_${arch}
         cp LICENSE output/terraform-provider-jira_${TAG}_${os}_${arch}
+
+
+        if test -n "${dest}"; then
+            mkdir -p "${dest}/.terraform.d/plugins/local/fceller/jira/${TAG}/${os}_${arch}"
+            cp \
+                "output/terraform-provider-jira_${TAG}_${os}_${arch}/terraform-provider-jira_${TAG}" \
+                "${dest}/.terraform.d/plugins/local/fceller/jira/${TAG}/${os}_${arch}/terraform-provider-jira"
+        fi
     done
 done
 echo

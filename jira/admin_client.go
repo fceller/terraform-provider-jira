@@ -66,8 +66,11 @@ func (c *AdminClient) Do(req *http.Request, v interface{}) (*http.Response, erro
 	}
 
 	if c := resp.StatusCode; !(200 <= c && c <= 299) {
-		return nil, fmt.Errorf("request failed. Please analyze the request body for more details. Status code: %d", c)
-
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf(
+			"request failed. Please analyze the request body for more details. Status code: %d, body: %s",
+			c, body)
 	}
 
 	if v != nil {

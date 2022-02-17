@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	jira "github.com/andygrunwald/go-jira"
+	"github.com/andygrunwald/go-jira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 	"github.com/trivago/tgo/tcontainer"
@@ -419,7 +419,7 @@ func extractSameKeys(baseInput interface{}, extendedInput interface{}) interface
 	case map[string]interface{}:
 		if extendedInputMap, ok := extendedInput.(map[string]interface{}); ok {
 			output := map[string]interface{}{}
-			for key, _ := range baseInput.(map[string]interface{}) {
+			for key := range baseInput.(map[string]interface{}) {
 				output[key] = extendedInputMap[key]
 			}
 			return output
