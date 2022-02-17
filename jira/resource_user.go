@@ -146,9 +146,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			total := len(users)
 
 			if total == 1 {
-				d.SetId(search.Users.Users[0].AccountId)
-				d.Set("account_id", search.Users.Users[0].AccountId)
-				d.Set("display_name", search.Users.Users[0].DisplayName)
+				d.SetId(users[0].AccountId)
+				d.Set("account_id", users[0].AccountId)
+				d.Set("display_name", users[0].DisplayName)
 				d.Set("email", id)
 			} else {
 				names := make([]string, 0)
@@ -220,7 +220,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		_, err2 := config.adminClient.Do(req, nil)
 
 		if err2 != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(err2)
 		}
 	}
 
