@@ -1,13 +1,14 @@
 package jira
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"net/url"
 	"strings"
 
 	"github.com/andygrunwald/go-jira"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 // Group The struct sent to the JIRA instance to create a new GroupMembership
@@ -50,12 +51,14 @@ func getGroups(jiraClient *jira.Client, username string) (*UserGroups, *jira.Res
 // resourceGroupMembership is used to define a JIRA issue
 func resourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupMembershipCreate,
-		Read:   resourceGroupMembershipRead,
-		Delete: resourceGroupMembershipDelete,
+		CreateContext: resourceGroupMembershipCreate,
+		ReadContext:   resourceGroupMembershipRead,
+		DeleteContext: resourceGroupMembershipDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"username": {
 				Type:     schema.TypeString,
@@ -72,7 +75,9 @@ func resourceGroupMembership() *schema.Resource {
 }
 
 // resourceGroupMembershipCreate creates a new jira issue using the jira api
-func resourceGroupMembershipCreate(d *schema.ResourceData, m interface{}) error {
+func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	config := m.(*Config)
 
 	username := d.Get("username").(string)
@@ -88,16 +93,22 @@ func resourceGroupMembershipCreate(d *schema.ResourceData, m interface{}) error 
 
 	err := request(config.jiraClient, "POST", relativeURL.String(), groupMembership, nil)
 	if err != nil {
-		return errors.Wrap(err, "Request failed")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Request failed: %s", err.Error()),
+		})
+		return diags
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", username, group))
 
-	return resourceGroupMembershipRead(d, m)
+	return resourceGroupMembershipRead(ctx, d, m)
 }
 
 // resourceGroupMembershipRead reads issue details using jira api
-func resourceGroupMembershipRead(d *schema.ResourceData, m interface{}) error {
+func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	config := m.(*Config)
 
 	components := strings.SplitN(d.Id(), ":", 2)
@@ -106,7 +117,11 @@ func resourceGroupMembershipRead(d *schema.ResourceData, m interface{}) error {
 
 	groups, _, err := getGroups(config.jiraClient, username)
 	if err != nil {
-		return errors.Wrap(err, "getting jira group failed")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Request failed: %s", err.Error()),
+		})
+		return diags
 	}
 
 	d.Set("username", username)
@@ -118,11 +133,17 @@ func resourceGroupMembershipRead(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	return errors.Errorf("Cannot find group %s", groupname)
+	diags = append(diags, diag.Diagnostic{
+		Severity: diag.Error,
+		Summary:  fmt.Sprintf("Cannot find group: %s", groupname),
+	})
+	return diags
 }
 
 // resourceGroupMembershipDelete deletes jira issue using the jira api
-func resourceGroupMembershipDelete(d *schema.ResourceData, m interface{}) error {
+func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	config := m.(*Config)
 
 	relativeURL, _ := url.Parse(groupUserAPIEndpoint)
@@ -135,7 +156,11 @@ func resourceGroupMembershipDelete(d *schema.ResourceData, m interface{}) error 
 
 	err := request(config.jiraClient, "DELETE", relativeURL.String(), nil, nil)
 	if err != nil {
-		return errors.Wrap(err, "Request failed")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Request failed: %s", err.Error()),
+		})
+		return diags
 	}
 
 	return nil

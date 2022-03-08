@@ -13,7 +13,7 @@ import (
 
 // API Endpoints
 const filterAPIEndpoint = "/rest/api/2/filter"
-const groupAPIEndpoint = "/rest/api/2/group"
+const groupAPIEndpoint = "/rest/api/3/group"
 const groupUserAPIEndpoint = "/rest/api/3/group/user"
 
 const issueLinkAPIEndpoint = "/rest/api/2/issueLink"
