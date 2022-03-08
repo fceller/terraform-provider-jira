@@ -13,7 +13,7 @@ deps: ## Download dependencies
 build: ## Build
 	go build .
 
-tag: ## Create a tag
+tag: ## Create a tag, use TAG=0.1.2 to set the tag
 	@test -n "$(TAG)"
 	git pull --tags
 	git tag v$(TAG)

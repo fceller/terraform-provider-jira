@@ -14,7 +14,7 @@ import (
 // API Endpoints
 const filterAPIEndpoint = "/rest/api/2/filter"
 const groupAPIEndpoint = "/rest/api/2/group"
-const groupUserAPIEndpoint = "/rest/api/2/group/user"
+const groupUserAPIEndpoint = "/rest/api/3/group/user"
 
 const issueLinkAPIEndpoint = "/rest/api/2/issueLink"
 const issueLinkTypeAPIEndpoint = "/rest/api/2/issueLinkType"
@@ -23,7 +23,7 @@ const issueTypeAPIEndpoint = "/rest/api/2/issuetype"
 const projectAPIEndpoint = "/rest/api/2/project"
 const projectCategoryAPIEndpoint = "/rest/api/2/projectCategory"
 const roleAPIEndpoint = "/rest/api/2/role"
-const userAPIEndpoint = "/rest/api/2/user"
+const userAPIEndpoint = "/rest/api/3/user"
 const webhookAPIEndpoint = "/rest/webhooks/1.0/webhook"
 
 func projectWithSharedConfigurationAPIEndpoint(projectID int) string {

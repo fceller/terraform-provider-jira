@@ -1,10 +1,12 @@
 package jira
 
 import (
+	"context"
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pkg/errors"
 )
 
 // GroupRequest The struct sent to the JIRA instance to create a new Group
@@ -15,9 +17,13 @@ type GroupRequest struct {
 // resourceGroup is used to define a JIRA issue
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupCreate,
-		Read:   resourceGroupRead,
-		Delete: resourceGroupDelete,
+		CreateContext: resourceGroupCreate,
+		ReadContext:   resourceGroupRead,
+		DeleteContext: resourceGroupDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -30,7 +36,9 @@ func resourceGroup() *schema.Resource {
 }
 
 // resourceGroupCreate creates a new jira issue using the jira api
-func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	config := m.(*Config)
 
 	group := new(GroupRequest)
@@ -38,21 +46,31 @@ func resourceGroupCreate(d *schema.ResourceData, m interface{}) error {
 
 	err := request(config.jiraClient, "POST", groupAPIEndpoint, group, nil)
 	if err != nil {
-		return errors.Wrap(err, "Request failed")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Request failed: %s", err.Error()),
+		})
+		return diags
 	}
 
 	d.SetId(group.Name)
 
-	return resourceGroupRead(d, m)
+	return resourceGroupRead(ctx, d, m)
 }
 
 // resourceGroupRead reads issue details using jira api
-func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	config := m.(*Config)
 
 	_, _, err := config.jiraClient.Group.Get(d.Id())
 	if err != nil {
-		return errors.Wrap(err, "getting jira group failed")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("getting jira group failed: %s", err.Error()),
+		})
+		return diags
 	}
 
 	d.Set("name", d.Id())
@@ -61,7 +79,9 @@ func resourceGroupRead(d *schema.ResourceData, m interface{}) error {
 }
 
 // resourceGroupDelete deletes jira issue using the jira api
-func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	config := m.(*Config)
 
 	relativeURL, _ := url.Parse(groupAPIEndpoint)
@@ -73,7 +93,11 @@ func resourceGroupDelete(d *schema.ResourceData, m interface{}) error {
 
 	err := request(config.jiraClient, "DELETE", relativeURL.String(), nil, nil)
 	if err != nil {
-		return errors.Wrap(err, "Request failed")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Request failed: %s", err.Error()),
+		})
+		return diags
 	}
 
 	return nil
