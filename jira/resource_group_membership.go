@@ -66,7 +66,8 @@ func resourceGroupMembership() *schema.Resource {
 			"account_id": {
 				Description: "The Atlassian account id.",
 				Type:        schema.TypeString,
-				Computed:    true,
+				Required:    true,
+				ForceNew:    true,
 			},
 			"group": {
 				Type:     schema.TypeString,
