@@ -158,7 +158,19 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 
 	relativeURL.RawQuery = query.Encode()
 
-	err := request(config.jiraClient, "DELETE", relativeURL.String(), nil, nil)
+	client := config.jiraClient
+	req, err := client.NewRequest("DELETE", relativeURL.String(), nil)
+
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Cannot build request: %s", err.Error()),
+		})
+		return diags
+	}
+
+	_, err = client.Do(req, nil)
+
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
