@@ -11,12 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Group The struct sent to the JIRA instance to create a new GroupMembership
+// GroupMembership The struct sent to the JIRA instance to create a new GroupMembership
+type GroupMembership struct {
+	AccountId string `json:"accountId,omitempty" structs:"accountId,omitempty"`
+}
+
+// Groups List of groups the user belongs to
 type Group struct {
 	Name string `json:"name,omitempty" structs:"name,omitempty"`
 }
 
-// Groups List of groups the user belongs to
 type Groups struct {
 	Items []Group `json:"items,omitempty" structs:"items,omitempty"`
 }
@@ -26,11 +30,10 @@ type UserGroups struct {
 	Groups Groups `json:"groups,omitempty" structs:"groups,omitempty"`
 }
 
-func getGroups(jiraClient *jira.Client, username string) (*UserGroups, *jira.Response, error) {
-
-	relativeURL, _ := url.Parse("/rest/api/2/user")
+func getGroups(jiraClient *jira.Client, accountId string) (*UserGroups, *jira.Response, error) {
+	relativeURL, _ := url.Parse("/rest/api/3/user")
 	query := relativeURL.Query()
-	query.Set("username", username)
+	query.Set("accountId", accountId)
 	query.Set("expand", "groups")
 
 	relativeURL.RawQuery = query.Encode()
@@ -48,7 +51,7 @@ func getGroups(jiraClient *jira.Client, username string) (*UserGroups, *jira.Res
 	return user, resp, nil
 }
 
-// resourceGroupMembership is used to define a JIRA issue
+// resourceGroupMembership is used to define a JIRA group membership
 func resourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceGroupMembershipCreate,
@@ -60,10 +63,10 @@ func resourceGroupMembership() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"username": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"account_id": {
+				Description: "The Atlassian account id.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"group": {
 				Type:     schema.TypeString,
@@ -74,17 +77,17 @@ func resourceGroupMembership() *schema.Resource {
 	}
 }
 
-// resourceGroupMembershipCreate creates a new jira issue using the jira api
+// resourceGroupMembershipCreate creates a new jira group membership using the jira api
 func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	config := m.(*Config)
 
-	username := d.Get("username").(string)
+	accountId := d.Get("account_id").(string)
 	group := d.Get("group").(string)
 
-	groupMembership := new(Group)
-	groupMembership.Name = username
+	groupMembership := new(GroupMembership)
+	groupMembership.AccountId = accountId
 
 	relativeURL, _ := url.Parse(groupUserAPIEndpoint)
 	query := relativeURL.Query()
@@ -100,7 +103,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 		return diags
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", username, group))
+	d.SetId(fmt.Sprintf("%s:%s", accountId, group))
 
 	return resourceGroupMembershipRead(ctx, d, m)
 }
@@ -112,10 +115,10 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, m 
 	config := m.(*Config)
 
 	components := strings.SplitN(d.Id(), ":", 2)
-	username := components[0]
+	accountId := components[0]
 	groupname := components[1]
 
-	groups, _, err := getGroups(config.jiraClient, username)
+	groups, _, err := getGroups(config.jiraClient, accountId)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -124,7 +127,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, m 
 		return diags
 	}
 
-	d.Set("username", username)
+	d.Set("accountId", accountId)
 	d.Set("group", groupname)
 
 	for _, group := range groups.Groups.Items {
@@ -149,7 +152,7 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 	relativeURL, _ := url.Parse(groupUserAPIEndpoint)
 
 	query := relativeURL.Query()
-	query.Set("username", d.Get("username").(string))
+	query.Set("accountId", d.Get("accountId").(string))
 	query.Set("groupname", d.Get("group").(string))
 
 	relativeURL.RawQuery = query.Encode()
