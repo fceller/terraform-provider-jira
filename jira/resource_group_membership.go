@@ -104,7 +104,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 		return diags
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", accountId, group))
+	d.SetId(fmt.Sprintf("%s/%s", accountId, group))
 
 	return resourceGroupMembershipRead(ctx, d, m)
 }
@@ -115,7 +115,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, m 
 
 	config := m.(*Config)
 
-	components := strings.SplitN(d.Id(), ":", 2)
+	components := strings.SplitN(d.Id(), "/", 2)
 	accountId := components[0]
 	groupname := components[1]
 
