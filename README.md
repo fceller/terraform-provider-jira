@@ -1,11 +1,9 @@
 # terraform-provider-jira
 
 Terraform Provider for managing
-JIRA. (__[View on registry.terraform.io](https://registry.terraform.io/providers/fourplusone/jira/latest)__)
+JIRA. (__[View on registry.terraform.io](https://registry.terraform.io/providers/fceller/jira/latest)__)
 
-__[Support this project on Patreon](https://www.patreon.com/fourplusone)__
-
-[![CircleCI](https://circleci.com/gh/fourplusone/terraform-provider-jira.svg?style=svg)](https://circleci.com/gh/fourplusone/terraform-provider-jira)
+This is working in progress to adapt the plugin for Jira Cloud.
 
 ## Data Sources
 
