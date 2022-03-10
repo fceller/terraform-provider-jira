@@ -1,6 +1,7 @@
 # terraform-provider-jira
 
-Terraform Provider for managing JIRA. (__[View on registry.terraform.io](https://registry.terraform.io/providers/fourplusone/jira/latest)__)
+Terraform Provider for managing
+JIRA. (__[View on registry.terraform.io](https://registry.terraform.io/providers/fourplusone/jira/latest)__)
 
 __[Support this project on Patreon](https://www.patreon.com/fourplusone)__
 
@@ -32,8 +33,7 @@ This can be used to interlink infrastructure management with JIRA issues closely
 
 ![terraform-provider-jira demo](./images/terraform-provider-jira.gif)
 
-## Compatibility 
-
+## Compatibility
 
 | Version | Status       |  
 |---------|--------------|
@@ -60,9 +60,10 @@ terraform {
 
 Run `terraform init`
 
-## Terraform v0.12 
+## Terraform v0.12
 
-* Download `terraform-provider-jira` binary from [Github](https://github.com/fourplusone/terraform-provider-jira/releases)
+* Download `terraform-provider-jira` binary
+  from [Github](https://github.com/fourplusone/terraform-provider-jira/releases)
 * Unzip the zip file
 * Then move `terraform-provider-jira` binary to `$HOME/.terraform.d/plugins` directory
 
@@ -90,7 +91,7 @@ export JIRA_USER=username
 export JIRA_PASSWORD=password
 ```
 
-It's also possible to use an API-Token from JIRA cloud. In this case, set 
+It's also possible to use an API-Token from JIRA cloud. In this case, set
 
 ```bash
 export JIRA_URL=https://yourinstance.atlassian.net
@@ -310,11 +311,13 @@ Run `terraform apply`
 terraform apply
 ```
 
-## Building 
+## Building
 
 If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine.
 
-*Note:* This project uses [Go Modules](https://blog.golang.org/using-go-modules) making it safe to work with it outside of your existing [GOPATH](http://golang.org/doc/code.html#GOPATH). The instructions that follow assume a directory in your home directory outside of the standard GOPATH (i.e `$HOME/development/terraform-providers/`).
+*Note:* This project uses [Go Modules](https://blog.golang.org/using-go-modules) making it safe to work with it outside
+of your existing [GOPATH](http://golang.org/doc/code.html#GOPATH). The instructions that follow assume a directory in
+your home directory outside of the standard GOPATH (i.e `$HOME/development/terraform-providers/`).
 
 Clone repository to: `$HOME/development/terraform-providers/`
 
@@ -331,9 +334,9 @@ $ make build
 ```
 
 ## Rationale
-Working in Operations engineering organizations infrastructure is often driven by tickets. Why not track infrastructure using tickets but this time we will use code.
-This just showcases that you can pretty much Terraform anything!
 
+Working in Operations engineering organizations infrastructure is often driven by tickets. Why not track infrastructure
+using tickets but this time we will use code. This just showcases that you can pretty much Terraform anything!
 
 ## Credits
 

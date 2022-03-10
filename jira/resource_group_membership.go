@@ -128,7 +128,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, m 
 		return diags
 	}
 
-	d.Set("accountId", accountId)
+	d.Set("account_id", accountId)
 	d.Set("group", groupname)
 
 	for _, group := range groups.Groups.Items {
@@ -153,7 +153,7 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 	relativeURL, _ := url.Parse(groupUserAPIEndpoint)
 
 	query := relativeURL.Query()
-	query.Set("accountId", d.Get("accountId").(string))
+	query.Set("accountId", d.Get("account_id").(string))
 	query.Set("groupname", d.Get("group").(string))
 
 	relativeURL.RawQuery = query.Encode()

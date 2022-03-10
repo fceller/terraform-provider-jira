@@ -18,12 +18,12 @@ workflows:
               ignore: /.*/
   build:
     jobs:
-        - build
-        - test
+      - build
+      - test
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.16  
+      - image: circleci/golang:1.16
     steps:
       - checkout
 
@@ -31,11 +31,11 @@ jobs:
           name: Build
           command: make release
           no_output_timeout: 30m
-          
+
       - persist_to_workspace:
           root: .
           paths:
-            - artifacts   
+            - artifacts
   
   test:
     docker:
@@ -55,7 +55,7 @@ jobs:
             done
       - run:
           name: Testing
-          environment: 
+          environment:
             JIRA_URL: http://localhost:2990/jira/
             JIRA_USER: admin
             JIRA_PASSWORD: admin
