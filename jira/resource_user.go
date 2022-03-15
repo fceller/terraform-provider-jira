@@ -47,7 +47,6 @@ func resourceUser() *schema.Resource {
 				Description: "The email address of the user.",
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -216,6 +215,26 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			"POST",
 			apiEndpoint,
 			map[string]interface{}{"message": "managed by terraform"})
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		_, err2 := config.adminClient.Do(req, nil)
+
+		if err2 != nil {
+			return diag.FromErr(err2)
+		}
+	}
+
+	if email := d.Get("email"); d.HasChange("email") {
+		apiEndpoint := fmt.Sprintf("/users/%s/manage/email", id)
+
+		req, err := config.adminClient.NewRequestWithContext(
+			ctx,
+			"POST",
+			apiEndpoint,
+			map[string]interface{}{"email": email})
 
 		if err != nil {
 			return diag.FromErr(err)
