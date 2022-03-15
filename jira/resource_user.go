@@ -232,7 +232,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 		req, err := config.adminClient.NewRequestWithContext(
 			ctx,
-			"POST",
+			"PUT",
 			apiEndpoint,
 			map[string]interface{}{"email": email})
 
